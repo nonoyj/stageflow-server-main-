@@ -4,12 +4,15 @@ import cors from "cors";
 import fetch from "node-fetch";
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// Claude API key from environment
 const API_KEY = process.env.STAGEFLOW_API_KEY;
 
-// Root route to confirm server is running
+// Root route for testing
 app.get("/", (req, res) => {
   res.send("Server is running!");
 });
@@ -64,6 +67,7 @@ app.post("/ai", async (req, res) => {
   }
 });
 
+// Listen on port
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`AI server running on port ${PORT}`);
