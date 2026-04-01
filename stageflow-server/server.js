@@ -4,15 +4,12 @@ import cors from "cors";
 import fetch from "node-fetch";
 
 const app = express();
-
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Claude API key from .env
 const API_KEY = process.env.STAGEFLOW_API_KEY;
 
-// Test route to check server
+// Root route to confirm server is running
 app.get("/", (req, res) => {
   res.send("Server is running!");
 });
@@ -55,8 +52,9 @@ app.post("/ai", async (req, res) => {
 
     const data = await response.json();
 
-    // Claude returns 'completion' string, not 'content' array
-    const text = data.completion || "";
+    const text = (data.content || [])
+      .map(block => block.text || "")
+      .join("");
 
     res.json({ reply: text });
 
@@ -66,7 +64,6 @@ app.post("/ai", async (req, res) => {
   }
 });
 
-// Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`AI server running on port ${PORT}`);

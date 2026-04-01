@@ -7,42 +7,64 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const API_KEY = process.env.AI_API_KEY;
+const API_KEY = process.env.STAGEFLOW_API_KEY;
 
+// Root route to confirm server is running
+app.get("/", (req, res) => {
+  res.send("Server is running!");
+});
+
+// AI POST endpoint
 app.post("/ai", async (req, res) => {
   try {
     const { message, system } = req.body;
 
+    if (!message) {
+      return res.status(400).json({ error: "Missing message" });
+    }
+
     const body = {
       model: "claude-sonnet-4-20250514",
       max_tokens: 1000,
-      messages: [{ role: "user", content: message }]
+      messages: [
+        ...(system ? [{ role: "system", content: system }] : []),
+        { role: "user", content: message }
+      ]
     };
 
-    if (system) body.system = system;
+    const response = await fetch(
+      "https://api.anthropic.com/v1/messages",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": API_KEY,
+          "anthropic-version": "2023-06-01"
+        },
+        body: JSON.stringify(body)
+      }
+    );
 
-    const response = await fetch("3e1b0243-10e2-4885-99a4-11126a180225", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": AI_API_KEY,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify(body)
-    });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Anthropic error ${response.status}: ${errText}`);
+    }
 
     const data = await response.json();
 
     const text = (data.content || [])
-      .map(b => b.text || "")
+      .map(block => block.text || "")
       .join("");
 
     res.json({ reply: text });
 
   } catch (err) {
-    console.error(err);
+    console.error("AI error:", err);
     res.status(500).json({ error: "AI failed" });
   }
 });
 
-app.listen(3000, () => console.log("AI server running on port 3000"));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`AI server running on port ${PORT}`);
+});
