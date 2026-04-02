@@ -5,19 +5,15 @@ import fetch from "node-fetch";
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Claude API key from environment
 const API_KEY = process.env.STAGEFLOW_API_KEY;
 
-// Root route for testing
 app.get("/", (req, res) => {
   res.send("Server is running!");
 });
 
-// AI POST endpoint
 app.post("/ai", async (req, res) => {
   try {
     const { message, system } = req.body;
@@ -36,7 +32,7 @@ app.post("/ai", async (req, res) => {
     };
 
     const response = await fetch(
-      "https://api.anthropic.com/v1/messages",
+      "https://stageflow-server-main.onrender.com/ais",
       {
         method: "POST",
         headers: {
@@ -50,7 +46,7 @@ app.post("/ai", async (req, res) => {
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Anthropic error ${response.status}: ${errText}`);
+      throw new Error(`stageflow AI error ${response.status}: ${errText}`);
     }
 
     const data = await response.json();
